@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>林知远 · 独立设计师 & 前端开发者</title>
+<meta name="description" content="林知远 — 独立设计师与前端开发者，专注于品牌视觉、界面设计与创意网页。">
+
+<!-- 字体：Fraunces（衬线展示）+ Outfit（无衬线正文），CDN 加载失败自动回退系统字体栈 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   0. Design Tokens
+   ============================================================ */
+:root{
+  --bg:        #f7f5f0;   /* 暖纸白 */
+  --bg-soft:   #efede6;
+  --ink:       #22201c;   /* 墨色（非纯黑） */
+  --ink-2:     #55524b;   /* 次级文本 */
+  --ink-3:     #8a857b;   /* 弱化文本 */
+  --line:      #e4e0d6;   /* 细线 */
+  --accent:    #2e5d4f;   /* 墨绿强调 */
+  --accent-2:  #477a6b;
+  --accent-soft: rgba(46,93,79,.08);
+  --serif: "Fraunces", "Songti SC", "STSong", Georgia, serif;
+  --sans:  "Outfit", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --maxw: 1200px;
+  --pad:   clamp(1.5rem, 5vw, 4rem);
+  --ease: cubic-bezier(.16,1,.3,1);
+}
+
+/* ============================================================
+   1. Reset & Base
+   ============================================================ */
+*,*::before,*::after{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-weight:400;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+/* 纸感噪点层 —— 固定在视口、不响应指针，避免滚动重绘 */
+body::after{
+  content:"";
+  position:fixed; inset:0;
+  z-index:9998;
+  pointer-events:none;
+  opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+img,svg{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+ul{ list-style:none; }
+::selection{ background:var(--accent); color:#fff; }
+
+/* ============================================================
+   2. Layout Helpers
+   ============================================================ */
+.container{ max-width:var(--maxw); margin:0 auto; padding:0 var(--pad); }
+.section{ padding:clamp(5.5rem,12vw,9rem) 0; }
+.sec-head{ margin-bottom:clamp(2.5rem,6vw,4.5rem); }
+.sec-index{
+  font-size:.78rem;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+.sec-index::before{ content:""; width:2.2rem; height:1px; background:var(--accent); opacity:.6; }
+.sec-title{
+  font-family:var(--serif);
+  font-weight:400;
+  font-size:clamp(2rem,5vw,3.2rem);
+  line-height:1.15;
+  letter-spacing:-.01em;
+  margin-top:1rem;
+  max-width:22ch;
+}
+.sec-title em{ font-style:italic; color:var(--accent); }
+
+/* ============================================================
+   3. Reveal-on-scroll
+   ============================================================ */
+.reveal{ opacity:0; transform:translateY(28px); transition:opacity .9s var(--ease), transform .9s var(--ease); }
+.reveal.in-view{ opacity:1; transform:none; }
+.reveal[data-delay="1"]{ transition-delay:.12s; }
+.reveal[data-delay="2"]{ transition-delay:.24s; }
+.reveal[data-delay="3"]{ transition-delay:.36s; }
+
+/* ============================================================
+   4. Header / Nav
+   ============================================================ */
+.site-header{
+  position:fixed; top:0; left:0; right:0;
+  z-index:1000;
+  transition:background .4s var(--ease), box-shadow .4s var(--ease);
+}
+.site-header.scrolled{
+  background:rgba(247,245,240,.86);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  box-shadow:0 1px 0 var(--line);
+}
+.nav{
+  max-width:var(--maxw);
+  margin:0 auto;
+  padding:.95rem var(--pad);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.brand{ font-family:var(--serif); font-weight:500; font-size:1.2rem; letter-spacing:-.01em; }
+.brand span{ color:var(--accent); }
+.nav-links{ display:flex; gap:2.2rem; }
+.nav-links a{
+  font-size:.88rem;
+  color:var(--ink-2);
+  position:relative;
+  padding:.2rem 0;
+  transition:color .3s var(--ease);
+}
+.nav-links a::after{
+  content:""; position:absolute; left:0; bottom:0;
+  width:100%; height:1px;
+  background:var(--accent);
+  transform:scaleX(0); transform-origin:right;
+  transition:transform .4s var(--ease);
+}
+.nav-links a:hover{ color:var(--ink); }
+.nav-links a:hover::after{ transform:scaleX(1); transform-origin:left; }
+.nav-cta{
+  font-size:.88rem;
+  padding:.5rem 1.25rem;
+  border:1px solid var(--ink);
+  border-radius:99px;
+  transition:all .35s var(--ease);
+}
+.nav-cta:hover{ background:var(--ink); color:var(--bg); }
+.nav-burger{ display:none; background:none; border:none; cursor:pointer; padding:.4rem; }
+.nav-burger span{ display:block; width:22px; height:1.5px; background:var(--ink); margin:5px 0; transition:transform .35s var(--ease), opacity .3s; }
+
+/* 移动端菜单 */
+@media (max-width:767px){
+  .nav-links{
+    position:fixed; inset:0;
+    background:var(--bg);
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:2.4rem;
+    font-size:1.4rem;
+    transform:translateY(-100%);
+    transition:transform .5s var(--ease);
+    z-index:-1;
+  }
+  .nav-links.open{ transform:none; }
+  .nav-links a{ color:var(--ink); font-family:var(--serif); font-size:1.6rem; }
+  .nav-links .mobile-hide{ display:none; }
+  .nav-burger{ display:block; z-index:2; }
+  .nav-burger.open span:nth-child(1){ transform:translateY(6.5px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2){ opacity:0; }
+  .nav-burger.open span:nth-child(3){ transform:translateY(-6.5px) rotate(-45deg); }
+}
+
+/* ============================================================
+   5. Hero —— 非对称：左文右图
+   ============================================================ */
+.hero{
+  min-height:100dvh;
+  display:flex;
+  align-items:center;
+  padding-top:6rem;
+}
+.hero-grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:clamp(2rem,6vw,5rem);
+  align-items:center;
+  width:100%;
+}
+.hero-kicker{
+  display:inline-flex; align-items:center; gap:.6rem;
+  font-size:.8rem; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ink-3);
+  margin-bottom:1.6rem;
+}
+.hero-kicker .dot{
+  width:8px; height:8px; border-radius:50%;
+  background:var(--accent);
+  animation:pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(46,93,79,.35); }
+  55%{ box-shadow:0 0 0 7px rgba(46,93,79,0); }
+}
+.hero h1{
+  font-family:var(--serif);
+  font-weight:400;
+  font-size:clamp(2.6rem,6.5vw,4.6rem);
+  line-height:1.08;
+  letter-spacing:-.02em;
+}
+.hero h1 .accent{ color:var(--accent); font-style:italic; }
+.hero-sub{
+  margin-top:1.8rem;
+  color:var(--ink-2);
+  font-size:1.05rem;
+  max-width:46ch;
+  line-height:1.9;
+}
+.hero-actions{ margin-top:2.6rem; display:flex; gap:1.1rem; flex-wrap:wrap; }
+.btn{
+  display:inline-flex; align-items:center; gap:.55rem;
+  font-family:var(--sans); font-size:.95rem; font-weight:500;
+  padding:.85rem 1.7rem;
+  border-radius:99px;
+  border:1px solid transparent;
+  cursor:pointer;
+  transition:transform .35s var(--ease), background .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease);
+  will-change:transform;
+}
+.btn:active{ transform:scale(.97); }
+.btn-primary{ background:var(--accent); color:#f3f1ea; }
+.btn-primary:hover{ background:var(--accent-2); }
+.btn-ghost{ border-color:var(--line); color:var(--ink); background:transparent; }
+.btn-ghost:hover{ border-color:var(--ink); }
+.btn svg{ transition:transform .35s var(--ease); }
+.btn:hover svg{ transform:translateX(3px); }
+
+/* Hero 视觉图 —— 内联 SVG 画布节点 */
+.hero-visual{ position:relative; }
+.hero-visual .frame{
+  position:relative;
+  aspect-ratio:4/5;
+  border-radius:2px;
+  overflow:hidden;
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+}
+.hero-visual .stitch{
+  position:absolute; inset:.8rem;
+  border:1px dashed var(--line);
+  border-radius:1px;
+  pointer-events:none;
+}
+.hero-visual .caption{
+  position:absolute; bottom:1.6rem; left:1.8rem;
+  font-size:.72rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3);
+}
+.hero-visual .float-tag{
+  position:absolute;
+  top:-1.1rem; right:-1rem;
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:99px;
+  padding:.45rem 1.1rem;
+  font-size:.78rem;
+  color:var(--ink-2);
+  box-shadow:0 10px 24px -12px rgba(34,32,28,.18);
+  animation:floaty 6s ease-in-out infinite;
+}
+.hero-visual .float-tag.t2{ top:auto; bottom:12%; right:-1.4rem; animation-delay:-3s; }
+@keyframes floaty{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-9px); }
+}
+
+/* ============================================================
+   6. Works —— 不对称双列
+   ============================================================ */
+.works{ border-top:1px solid var(--line); }
+.work-grid{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:clamp(2.5rem,6vw,5rem);
+  row-gap:clamp(3.5rem,8vw,6rem);
+  align-items:start;
+}
+.work-item:nth-child(even){ transform:translateY(clamp(2rem,6vw,4rem)); }
+.work-img{
+  position:relative;
+  aspect-ratio:4/3;
+  overflow:hidden;
+  border-radius:2px;
+  border:1px solid var(--line);
+  background:var(--bg-soft);
+}
+.work-img svg{ width:100%; height:100%; transition:transform .9s var(--ease); }
+.work-item:hover .work-img svg{ transform:scale(1.045); }
+.work-num{
+  font-size:.75rem; letter-spacing:.2em; color:var(--ink-3);
+  margin:.95rem 0 .35rem; font-variant-numeric:tabular-nums;
+}
+.work-item h3{
+  font-family:var(--serif); font-weight:500;
+  font-size:clamp(1.35rem,2.6vw,1.75rem);
+  letter-spacing:-.01em;
+}
+.work-item h3 a{ position:relative; }
+.work-item h3 a::after{
+  content:""; position:absolute; left:0; bottom:.04em;
+  width:100%; height:1px; background:var(--accent);
+  transform:scaleX(0); transform-origin:right;
+  transition:transform .45s var(--ease);
+}
+.work-item:hover h3 a::after{ transform:scaleX(1); transform-origin:left; }
+.work-tags{ display:flex; gap:.5rem; flex-wrap:wrap; margin:.8rem 0 .5rem; }
+.work-tags span{
+  font-size:.72rem; letter-spacing:.06em;
+  color:var(--ink-2);
+  padding:.22rem .75rem;
+  border:1px solid var(--line);
+  border-radius:99px;
+}
+.work-desc{ color:var(--ink-2); font-size:.95rem; max-width:44ch; }
+
+/* ============================================================
+   7. About —— 图文并茂
+   ============================================================ */
+.about{ border-top:1px solid var(--line); }
+.about-grid{
+  display:grid;
+  grid-template-columns:.9fr 1.1fr;
+  gap:clamp(2.5rem,6vw,5rem);
+  align-items:start;
+}
+.about-portrait{ position:sticky; top:7rem; }
+.about-portrait .av{
+  aspect-ratio:1/1;
+  max-width:420px;
+  border-radius:2px;
+  overflow:hidden;
+  border:1px solid var(--line);
+}
+.about-portrait .av svg{ width:100%; height:100%; }
+.about-caption{
+  margin-top:1rem; font-size:.78rem; color:var(--ink-3);
+  letter-spacing:.04em;
+  display:flex; align-items:center; gap:.6rem;
+}
+.about-caption::before{ content:""; width:2rem; height:1px; background:var(--ink-3); }
+.about-body p{ color:var(--ink-2); margin-bottom:1.15rem; max-width:58ch; }
+.about-body p strong{ color:var(--ink); font-weight:500; }
+.about-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.5rem;
+  margin:2.6rem 0;
+  border-top:1px solid var(--line);
+  padding-top:2rem;
+}
+.stat .num{
+  font-family:var(--serif); font-size:2rem; font-weight:500; line-height:1.1;
+  color:var(--accent); font-variant-numeric:tabular-nums;
+}
+.stat .label{ font-size:.8rem; color:var(--ink-3); margin-top:.3rem; letter-spacing:.04em; }
+.timeline{ border-left:1px solid var(--line); padding-left:1.8rem; display:grid; gap:1.9rem; }
+.tl-item{ position:relative; }
+.tl-item::before{
+  content:""; position:absolute;
+  left:calc(-1.8rem - 3px); top:.4rem;
+  width:7px; height:7px; border-radius:50%;
+  background:var(--accent);
+}
+.tl-item .when{ font-size:.76rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+.tl-item h4{ font-family:var(--serif); font-weight:500; font-size:1.12rem; margin:.2rem 0 .25rem; }
+.tl-item p{ font-size:.9rem; color:var(--ink-2); }
+
+/* ============================================================
+   8. Contact / Footer
+   ============================================================ */
+.contact{
+  border-top:1px solid var(--line);
+  text-align:left;
+  background:linear-gradient(180deg, transparent, var(--bg-soft) 60%);
+}
+.contact .big{
+  font-family:var(--serif); font-weight:300;
+  font-size:clamp(2.3rem,7vw,5.2rem);
+  line-height:1.06; letter-spacing:-.02em;
+  margin-bottom:2rem;
+}
+.contact .big em{ font-style:italic; color:var(--accent); }
+.contact-row{
+  display:flex; flex-wrap:wrap; gap:1.2rem;
+  align-items:center;
+  margin-top:2.4rem;
+}
+.mail-link{
+  display:inline-flex; align-items:center; gap:.7rem;
+  font-family:var(--serif); font-size:clamp(1.1rem,2.5vw,1.5rem);
+  border-bottom:1px solid var(--accent);
+  padding-bottom:.15rem;
+  transition:color .3s, border-color .3s;
+}
+.mail-link:hover{ color:var(--accent); border-color:transparent; }
+.socials{ display:flex; gap:.9rem; }
+.socials a{
+  width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--line);
+  border-radius:50%;
+  transition:all .35s var(--ease);
+}
+.socials a:hover{ background:var(--ink); border-color:var(--ink); color:var(--bg); transform:translateY(-3px); }
+.site-footer{
+  border-top:1px solid var(--line);
+  padding:2rem 0;
+  display:flex; justify-content:space-between; align-items:center;
+  flex-wrap:wrap; gap:1rem;
+  color:var(--ink-3); font-size:.82rem;
+}
+.site-footer .to-top{
+  display:inline-flex; align-items:center; gap:.4rem;
+  color:var(--ink-2);
+  transition:color .3s;
+}
+.site-footer .to-top:hover{ color:var(--accent); }
+
+/* ============================================================
+   9. Responsive
+   ============================================================ */
+@media (max-width:1023px){
+  .hero-grid{ grid-template-columns:1fr; }
+  .hero-visual{ max-width:520px; }
+  .work-grid{ grid-template-columns:1fr; }
+  .work-item:nth-child(even){ transform:none; }
+  .about-grid{ grid-template-columns:1fr; }
+  .about-portrait{ position:static; max-width:420px; }
+}
+@media (max-width:767px){
+  .about-stats{ grid-template-columns:1fr 1fr; }
+  .nav-cta{ display:none; }
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation:none !important; transition:none !important; }
+  .reveal{ opacity:1; transform:none; }
+  html{ scroll-behavior:auto; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= Header ================= -->
+<header class="site-header" id="siteHeader">
+  <nav class="nav" aria-label="主导航">
+    <a class="brand" href="#top">林知远<span>.</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#works">作品</a></li>
+      <li><a href="#about">关于</a></li>
+      <li><a href="#contact">联系</a></li>
+      <li class="mobile-hide"><a href="#contact" class="nav-cta">一起做事</a></li>
+    </ul>
+    <button class="nav-burger" id="navBurger" aria-label="打开菜单" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ================= Hero ================= -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="hero-kicker"><span class="dot"></span>独立设计师 · 前端开发者 · 现居杭州</p>
+          <h1 class="reveal in-view">把想法做成<br>干净而有温度的<span class="accent">网页</span></h1>
+          <p class="hero-sub reveal" data-delay="1">
+            我是林知远，专注品牌视觉、界面设计与创意前端。六年里为
+            30+ 家团队把模糊的产品概念，打磨成能真正上线、被用户记住的网站。
+          </p>
+          <div class="hero-actions reveal" data-delay="2">
+            <a class="btn btn-primary" href="#works">
+              看看作品
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="btn btn-ghost" href="#contact" id="magnetBtn">说声你好</a>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal" data-delay="1">
+          <div class="frame">
+            <span class="stitch" aria-hidden="true"></span>
+            <!-- Hero 插图：远山与日，内联 SVG 手绘感 -->
+            <svg viewBox="0 0 400 500" role="img" aria-label="一幅远山与太阳的插画">
+              <defs>
+                <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#efe9dc"/>
+                  <stop offset="1" stop-color="#e2ddcc"/>
+                </linearGradient>
+                <linearGradient id="sunG" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#2e5d4f"/>
+                  <stop offset="1" stop-color="#4d8474"/>
+                </linearGradient>
+              </defs>
+              <rect width="400" height="500" fill="url(#sky)"/>
+              <!-- 大圆：半轮日 -->
+              <circle cx="282" cy="176" r="86" fill="url(#sunG)" opacity=".92"/>
+              <circle cx="282" cy="176" r="86" fill="none" stroke="#fff" stroke-width="1" opacity=".35"/>
+              <!-- 远山 -->
+              <path d="M0 340 Q 80 268 150 320 T 318 300 Q 372 284 400 306 V500 H0Z" fill="#3c5f55" opacity=".82"/>
+              <path d="M0 388 Q 96 336 176 372 T 400 352 V500 H0Z" fill="#2e4a42" opacity=".9"/>
+              <path d="M0 432 Q 120 396 240 424 T 400 414 V500 H0Z" fill="#20352f"/>
+              <!-- 水面与倒影 -->
+              <rect y="470" width="400" height="30" fill="#1d2c28"/>
+              <ellipse cx="282" cy="478" rx="70" ry="10" fill="#2e5d4f" opacity=".5"/>
+              <!-- 飞鸟 -->
+              <path d="M96 150 q 9 -8 18 0 M96 150 q -9 -8 -18 0" stroke="#55524b" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M140 128 q 7 -6 14 0 M140 128 q -7 -6 -14 0" stroke="#8a857b" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            </svg>
+            <p class="caption">Portrait — 插画习作 · 2026</p>
+          </div>
+          <div class="float-tag">视觉 · 品牌 · 前端</div>
+          <div class="float-tag t2">现开放合作</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Works ================= -->
+  <section class="works section" id="works">
+    <div class="container">
+      <div class="sec-head reveal">
+        <p class="sec-index">Selected Works</p>
+        <h2 class="sec-title">近年的四件<em>代表作品</em></h2>
+      </div>
+
+      <div class="work-grid">
+
+        <!-- 作品 01 -->
+        <article class="work-item reveal">
+          <div class="work-img">
+            <svg viewBox="0 0 480 360" role="img" aria-label="山茶茶品牌视觉设计稿">
+              <rect width="480" height="360" fill="#e9e5d8"/>
+              <circle cx="240" cy="168" r="120" fill="#2e5d4f"/>
+              <circle cx="240" cy="168" r="120" fill="none" stroke="#e9e5d8" stroke-width="1" opacity=".35"/>
+              <path d="M204 128 q36 26 72 0 q-8 46 -36 46 q-30 0 -36 -46Z" fill="#c9b98a"/>
+              <path d="M204 128 q-16 44 -4 74 q-26 -8 -32 -40 q10 -28 36 -34Z" fill="#a7b58b" opacity=".85"/>
+              <path d="M276 128 q16 44 4 74 q26 -8 32 -40 q-10 -28 -36 -34Z" fill="#8fae9a" opacity=".8"/>
+              <text x="240" y="322" text-anchor="middle" font-family="Georgia,serif" font-size="20" letter-spacing="8" fill="#2e5d4f">山 茶</text>
+            </svg>
+          </div>
+          <p class="work-num">No.01 — 品牌 · 2025</p>
+          <h3><a href="#works">「山茶」独立茶品牌视觉系统</a></h3>
+          <div class="work-tags"><span>品牌 VI</span><span>包装</span><span>落地页</span></div>
+          <p class="work-desc">从命名、字标到包装与官网的完整视觉体系，用克制的一抹墨绿，替一款冷门高山茶讲清「慢」的价值。</p>
+        </article>
+
+        <!-- 作品 02 -->
+        <article class="work-item reveal" data-delay="1">
+          <div class="work-img">
+            <svg viewBox="0 0 480 360" role="img" aria-label="夜航播客官网设计稿">
+              <rect width="480" height="360" fill="#22302c"/>
+              <defs>
+                <radialGradient id="moon" cx=".5" cy=".5" r=".5">
+                  <stop offset="0" stop-color="#f2ecd9"/>
+                  <stop offset="1" stop-color="#d8cdb0"/>
+                </radialGradient>
+              </defs>
+              <circle cx="352" cy="82" r="40" fill="url(#moon)" opacity=".95"/>
+              <g stroke="#e9e5d8" stroke-width="1" fill="none" opacity=".5">
+                <circle cx="200" cy="200" r="130"/><circle cx="200" cy="200" r="100"/>
+                <circle cx="200" cy="200" r="70"/><circle cx="200" cy="200" r="40"/>
+              </g>
+              <path d="M0 250 q40 20 80 0 t80 0 t80 0 t80 0 t80 0 t80 0" stroke="#c9b98a" stroke-width="2" fill="none"/>
+              <path d="M0 282 q50 -22 100 0 t100 0 t100 0 t100 0 t80 0" stroke="#8fae9a" stroke-width="1.4" fill="none" opacity=".8"/>
+              <text x="36" y="330" font-family="Georgia,serif" font-size="17" letter-spacing="6" fill="#f2ecd9">夜 航 —— 播 客</text>
+            </svg>
+          </div>
+          <p class="work-num">No.02 — 网页设计 · 2025</p>
+          <h3><a href="#works">「夜航」午夜播客官网</a></h3>
+          <div class="work-tags"><span>Web 设计</span><span>动效</span><span>音频交互</span></div>
+          <p class="work-desc">为这档深夜电台朋友谈话节目重建官网：星图般的目录、逐集时间轴与段位化收听进度，让每一期节目都有「航迹」。</p>
+        </article>
+
+        <!-- 作品 03 -->
+        <article class="work-item reveal">
+          <div class="work-img">
+            <svg viewBox="0 0 480 360" role="img" aria-label="拾光摄影工作室作品集网站设计稿">
+              <rect width="480" height="360" fill="#f2ede2"/>
+              <rect x="30" y="30" width="200" height="132" fill="#b3593c"/>
+              <rect x="250" y="30" width="200" height="132" fill="#2e5d4f"/>
+              <rect x="30" y="182" width="120" height="148" fill="#d9c9a3"/>
+              <rect x="170" y="182" width="150" height="148" fill="#5b5750"/>
+              <rect x="340" y="182" width="110" height="148" fill="#8a857b"/>
+              <g fill="none" stroke="#f2ede2" stroke-width="2" opacity=".55">
+                <rect x="30" y="30" width="200" height="132"/><rect x="250" y="30" width="200" height="132"/>
+              </g>
+              <text x="30" y="348" font-family="Georgia,serif" font-size="14" letter-spacing="5" fill="#5b5750">拾 光 · 摄 影</text>
+            </svg>
+          </div>
+          <p class="work-num">No.03 — 作品集站 · 2024</p>
+          <h3><a href="#works">「拾光」摄影工作室作品集</a></h3>
+          <div class="work-tags"><span>作品集</span><span>图片叙事</span><span>响应式</span></div>
+          <p class="work-desc">用胶片般的暖色调与杂志式排版重构展示逻辑，作品不再是排排坐的网格，而是一张能翻的「照片集」。</p>
+        </article>
+
+        <!-- 作品 04 -->
+        <article class="work-item reveal" data-delay="1">
+          <div class="work-img">
+            <svg viewBox="0 0 480 360" role="img" aria-label="回声声音笔记应用界面设计稿">
+              <rect width="480" height="360" fill="#e4e1d6"/>
+              <g stroke="#2e5d4f" stroke-width="3" fill="none" stroke-linecap="round">
+                <path d="M40 200 q12 -40 26 0 t26 0 t26 0 t26 0"/>
+                <path d="M280 160 q10 -34 22 0 t22 0 t22 0 t22 0" opacity=".55"/>
+                <path d="M160 240 q10 -34 22 0 t22 0 t22 0 t22 0" opacity=".35"/>
+              </g>
+              <g fill="#2e5d4f" opacity=".16"><circle cx="40" cy="200" r="34"/><circle cx="92" cy="200" r="34"/><circle cx="144" cy="200" r="34"/><circle cx="196" cy="200" r="34"/></g>
+              <rect x="30" y="70" width="228" height="26" rx="13" fill="#fff" opacity=".85"/>
+              <rect x="30" y="288" width="150" height="24" rx="12" fill="#2e5d4f"/>
+              <circle cx="398" cy="180" r="54" fill="none" stroke="#2e5d4f" stroke-width="2" opacity=".4"/>
+              <circle cx="398" cy="180" r="54" fill="none" stroke="#2e5d4f" stroke-width="2" stroke-dasharray="260 340" stroke-linecap="round" transform="rotate(-90 398 180)"/>
+              <text x="398" y="186" text-anchor="middle" font-size="15" fill="#2e5d4f" font-family="Outfit,sans-serif" font-weight="600">48%</text>
+            </svg>
+          </div>
+          <p class="work-num">No.04 — 产品设计 · 2024</p>
+          <h3><a href="#works">「回声」声音笔记 App</a></h3>
+          <div class="work-tags"><span>产品设计</span><span>交互</span><span>设计系统</span></div>
+          <p class="work-desc">一款把语音转成可检索笔记的工具。设计了极简录音动线与情绪化波形反馈，让记录动作轻到没有负担。</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= About ================= -->
+  <section class="about section" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-portrait reveal">
+          <div class="av">
+            <!-- 头像：墨水山日，避免通用占位头像 -->
+            <svg viewBox="0 0 420 420" role="img" aria-label="林知远的抽象肖像画，一轮旭日与群山">
+              <defs>
+                <linearGradient id="avBg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#efe6d2"/>
+                  <stop offset="1" stop-color="#ddd6c2"/>
+                </linearGradient>
+              </defs>
+              <rect width="420" height="420" fill="url(#avBg)"/>
+              <circle cx="210" cy="182" r="78" fill="#2e5d4f" opacity=".9"/>
+              <circle cx="210" cy="182" r="78" fill="none" stroke="#f7f5f0" stroke-width="1" opacity=".4"/>
+              <path d="M0 300 Q 104 236 190 286 T 420 268 V420 H0Z" fill="#39584e"/>
+              <path d="M0 352 Q 130 300 250 342 T 420 330 V420 H0Z" fill="#243e37"/>
+              <path d="M0 396 Q 150 366 300 392 T 420 382 V420 H0Z" fill="#182b26"/>
+              <text x="210" y="88" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="22" fill="#55524b" opacity=".8">自画像</text>
+            </svg>
+          </div>
+          <p class="about-caption">林知远 · 设计 & 代码 双栖</p>
+        </div>
+
+        <div class="about-body">
+          <p class="sec-index reveal" style="margin-bottom:1rem;">About</p>
+          <h2 class="sec-title reveal" style="margin-top:0;">一半设计师，一半<em>工程师</em></h2>
+
+          <p class="reveal" data-delay="1" style="margin-top:2.2rem;">
+            我入行第六年了。前三年在广告公司做品牌设计，后来一头扎进前端，
+            从此习惯用 <strong>两种语言</strong> 思考问题：设计稿里的栅格与留白，
+            和代码里的权衡与取舍，在我这里是一回事。
+          </p>
+          <p class="reveal" data-delay="1">
+            我相信好的网站不该只有「好看」，更要 <strong>快、稳、处处周到</strong>——
+            视觉上克制，技术上较真。合作的团队常说，找我做事最省心的地方在于：
+            设计稿什么样，上线就是什么样。
+          </p>
+
+          <div class="about-stats reveal" data-delay="2">
+            <div class="stat"><p class="num">36</p><p class="label">交付项目</p></div>
+            <div class="stat"><p class="num">7</p><p class="label">获设计奖项</p></div>
+            <div class="stat"><p class="num">6</p><p class="label">从业年限</p></div>
+          </div>
+
+          <div class="timeline reveal" data-delay="2">
+            <div class="tl-item">
+              <p class="when">2023 — 至今</p>
+              <h4>自由职业 · 独立接单</h4>
+              <p>为初创团队与艺术家提供品牌与网站一体化服务，平均每季度并行 2 个项目。</p>
+            </div>
+            <div class="tl-item">
+              <p class="when">2021 — 2023</p>
+              <h4>白屿设计工作室 · 高级设计师</h4>
+              <p>牵头 14 个品牌数字化项目，搭建了团队内部的设计系统与组件规范。</p>
+            </div>
+            <div class="tl-item">
+              <p class="when">2020 — 2021</p>
+              <h4>独立完成首件作品</h4>
+              <p>为一位独立音乐人做了他的第一个官网，从此确信「设计与代码应当不分家」。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Contact ================= -->
+  <section class="contact section" id="contact">
+    <div class="container">
+      <p class="sec-index reveal">Say Hello</p>
+      <h2 class="contact-big-wrap reveal" data-delay="1" style="font-family:var(--serif); font-weight:300; font-size:clamp(2.2rem,6.5vw,4.8rem); line-height:1.1; letter-spacing:-.02em; margin-top:1.2rem;">
+        有一个好想法？<br>我们把它<em style="font-style:italic; color:var(--accent);">做上线</em>
+      </h2>
+      <p class="reveal" data-delay="1" style="color:var(--ink-2); max-width:44ch; margin-top:1.6rem;">
+        无论是整站委托、设计改版，还是只想来聊聊方向，都欢迎来信。一般我会在
+        24 小时内回复。
+      </p>
+      <div class="contact-row reveal" data-delay="2">
+        <a class="mail-link" href="mailto:hello@linzhiyuan.design">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          hello@linzhiyuan.design
+        </a>
+        <div class="socials" aria-label="社交链接">
+          <a href="#contact" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg></a>
+          <a href="#contact" aria-label="即刻"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></a>
+          <a href="#contact" aria-label="小红书"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9.5c1.5-1 3-1 4.5 0s3 1.5 3 3-1.5 3-3 3-3-1-3-3v-5"/><path d="M9.5 10v4.5"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= Footer ================= -->
+<footer>
+  <div class="container">
+    <div class="site-footer">
+      <p>© 2026 林知远 · 用设计与代码，把想法变成产品</p>
+      <a class="to-top" href="#top">
+        回到顶部
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* === 滚动渐入：IntersectionObserver === */
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in-view'); });
+  }
+
+  /* === Header 滚动状态 === */
+  var header = document.getElementById('siteHeader');
+  var onScroll = function(){
+    header.classList.toggle('scrolled', window.scrollY > 24);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* === 移动端菜单 === */
+  var burger = document.getElementById('navBurger');
+  var navLinks = document.getElementById('navLinks');
+  burger.addEventListener('click', function(){
+    var open = navLinks.classList.toggle('open');
+    burger.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  navLinks.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      navLinks.classList.remove('open');
+      burger.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  /* === 磁吸按钮（仅精细指针设备） === */
+  var magnet = document.getElementById('magnetBtn');
+  if (magnet && window.matchMedia('(pointer:fine)').matches) {
+    magnet.addEventListener('mousemove', function(e){
+      var r = magnet.getBoundingClientRect();
+      var dx = (e.clientX - (r.left + r.width / 2)) * 0.18;
+      var dy = (e.clientY - (r.top + r.height / 2)) * 0.18;
+      magnet.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    });
+    magnet.addEventListener('mouseleave', function(){
+      magnet.style.transform = '';
+    });
+  }
+})();
+</script>
+</body>
+</html>
